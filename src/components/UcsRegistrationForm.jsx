@@ -13,118 +13,168 @@ const UCSRegistrationForm = ({ cursos = [], onSubmit }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.nomeuc.trim()) newErrors.nomeuc = 'Nome da UC é obrigatório';
-    if (!formData.cargahoraria) newErrors.cargahoraria = 'Carga horária é obrigatória';
-    if (!formData.idcurso) newErrors.idcurso = 'Curso é obrigatório';
+
+    if (!formData.nomeuc.trim()) {
+      newErrors.nomeuc = 'Nome da UC é obrigatório';
+    } else if (formData.nomeuc.trim().length < 3) {
+      newErrors.nomeuc = 'Nome da UC deve ter pelo menos 3 caracteres';
+    }
+
+    if (!formData.cargahoraria) {
+      newErrors.cargahoraria = 'Carga horária é obrigatória';
+    } else if (parseInt(formData.cargahoraria) < 1 || parseInt(formData.cargahoraria) > 500) {
+      newErrors.cargahoraria = 'Carga horária deve estar entre 1 e 500 horas';
+    }
+
+    if (!formData.idcurso) {
+      newErrors.idcurso = 'Curso é obrigatório';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    
+    if (!validateForm()) {
+      setSubmitMessage({
+        type: 'error',
+        text: 'Por favor, corrija os erros antes de continuar.'
+      });
+      return;
+    }
 
     setIsSubmitting(true);
+    setSubmitMessage({ type: '', text: '' });
+
     try {
       await onSubmit(formData);
-      setSubmitMessage({ type: 'success', text: 'Unidade Curricular registrada com sucesso!' });
+      setSubmitMessage({
+        type: 'success',
+        text: 'Unidade Curricular registrada com sucesso!'
+      });
       clearForm();
     } catch (error) {
-      setSubmitMessage({ type: 'error', text: `Erro ao registrar UC: ${error.message}` });
+      setSubmitMessage({
+        type: 'error',
+        text: `Erro ao registrar UC: ${error.message}`
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const clearForm = () => {
-    setFormData({ nomeuc: '', cargahoraria: '', idcurso: '' });
+    setFormData({
+      nomeuc: '',
+      cargahoraria: '',
+      idcurso: ''
+    });
     setErrors({});
+    setSubmitMessage({ type: '', text: '' });
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      {/* Nome UC */}
-      <div className="mb-3">
-        <label htmlFor="nomeuc" className="form-label">Nome da Unidade Curricular</label>
-        <div className="input-group">
-          <span className="input-group-text"><i className="bi bi-journal-text"></i></span>
+    <div>
+      <form onSubmit={handleSubmit} noValidate>
+        {/* Nome da UC */}
+        <div className="form-group">
+          <label htmlFor="nomeuc" className="form-label">
+            Nome
+          </label>
           <input
             type="text"
-            className={`form-control ${errors.nomeuc ? 'is-invalid' : ''}`}
+            className={`form-input ${errors.nomeuc ? 'error' : ''}`}
             id="nomeuc"
             name="nomeuc"
             value={formData.nomeuc}
             onChange={handleChange}
-            placeholder="Ex: Programação em Python"
+            placeholder="Nome"
           />
-          <div className="invalid-feedback">{errors.nomeuc}</div>
+          {errors.nomeuc && (
+            <div className="error-message">{errors.nomeuc}</div>
+          )}
         </div>
-      </div>
 
-      {/* Carga Horária */}
-      <div className="mb-3">
-        <label htmlFor="cargahoraria" className="form-label">Carga Horária (horas)</label>
-        <div className="input-group">
-          <span className="input-group-text"><i className="bi bi-clock"></i></span>
+        {/* Carga Horária */}
+        <div className="form-group">
+          <label htmlFor="cargahoraria" className="form-label">
+            Carga Horária
+          </label>
           <input
             type="number"
-            className={`form-control ${errors.cargahoraria ? 'is-invalid' : ''}`}
+            className={`form-input ${errors.cargahoraria ? 'error' : ''}`}
             id="cargahoraria"
             name="cargahoraria"
             value={formData.cargahoraria}
             onChange={handleChange}
-            placeholder="Ex: 60"
+            min="1"
+            max="500"
+            placeholder="Carga Horária"
           />
-          <div className="invalid-feedback">{errors.cargahoraria}</div>
+          {errors.cargahoraria && (
+            <div className="error-message">{errors.cargahoraria}</div>
+          )}
         </div>
-      </div>
 
-      {/* Curso */}
-      <div className="mb-3">
-        <label htmlFor="idcurso" className="form-label">Curso</label>
-        <div className="input-group">
-          <span className="input-group-text"><i className="bi bi-mortarboard"></i></span>
+        {/* Curso */}
+        <div className="form-group">
+          <label htmlFor="idcurso" className="form-label">
+            Curso
+          </label>
           <select
-            className={`form-select ${errors.idcurso ? 'is-invalid' : ''}`}
+            className={`form-select ${errors.idcurso ? 'error' : ''}`}
             id="idcurso"
             name="idcurso"
             value={formData.idcurso}
             onChange={handleChange}
           >
-            <option value="">Selecione um curso</option>
+            <option value="">Técnico em Informática</option>
             {cursos.map(curso => (
-              <option key={curso.idcurso} value={curso.idcurso}>{curso.nomecurso}</option>
+              <option key={curso.idcurso} value={curso.idcurso}>
+                {curso.nomecurso}
+              </option>
             ))}
           </select>
-          <div className="invalid-feedback">{errors.idcurso}</div>
+          {errors.idcurso && (
+            <div className="error-message">{errors.idcurso}</div>
+          )}
         </div>
-      </div>
 
-      {/* Botões */}
-      <div className="d-flex justify-content-end gap-2 mt-3">
-        <button type="submit" className="btn btn-success" disabled={isSubmitting}>
-          <i className="bi bi-save me-2"></i>
-          {isSubmitting ? 'Salvando...' : 'Salvar Unidade Curricular'}
+        {/* Submit button */}
+        <button 
+          type="submit" 
+          className="btn-save"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Salvando...' : '💾 Salvar Unidade Curricular'}
         </button>
-        <button type="button" className="btn btn-secondary" onClick={clearForm} disabled={isSubmitting}>
-          <i className="bi bi-x-circle me-2"></i>
-          Limpar
-        </button>
-      </div>
+      </form>
 
-      {/* Mensagem */}
+      {/* Success/Error message */}
       {submitMessage.text && (
-        <div className={`alert mt-3 ${submitMessage.type === 'success' ? 'alert-success' : 'alert-danger'}`}>
+        <div className={`message ${submitMessage.type}`}>
           {submitMessage.text}
         </div>
       )}
-    </form>
+    </div>
   );
 };
 

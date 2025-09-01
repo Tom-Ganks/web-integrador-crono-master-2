@@ -4,10 +4,13 @@ import { supabaseClient } from '../services/supabase.js';
 
 const UCSRegistrationPage = () => {
   const [cursos, setCursos] = useState([]);
+  const [ucs, setUcs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCurso, setSelectedCurso] = useState('');
 
   useEffect(() => {
     loadCursos();
+    loadUcs();
   }, []);
 
   const loadCursos = async () => {
@@ -21,6 +24,20 @@ const UCSRegistrationPage = () => {
       setCursos(data || []);
     } catch (error) {
       console.error('Erro ao carregar cursos:', error);
+    }
+  };
+
+  const loadUcs = async () => {
+    try {
+      const { data, error } = await supabaseClient
+        .from('unidades_curriculares')
+        .select('iduc, nomeuc, cargahoraria, cursos(nomecurso)')
+        .order('nomeuc');
+
+      if (error) throw error;
+      setUcs(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar UCs:', error);
     } finally {
       setLoading(false);
     }
@@ -28,7 +45,7 @@ const UCSRegistrationPage = () => {
 
   const handleUCSSubmit = async (ucsData) => {
     try {
-      const { data, error } = await supabaseClient
+      const { error } = await supabaseClient
         .from('unidades_curriculares')
         .insert([{
           nomeuc: ucsData.nomeuc,
@@ -37,35 +54,76 @@ const UCSRegistrationPage = () => {
         }]);
 
       if (error) throw error;
-      return { success: true, data };
+      await loadUcs();
     } catch (error) {
       console.error('Erro ao registrar UCS:', error);
       throw error;
     }
   };
 
+  const filteredUcs = selectedCurso 
+    ? ucs.filter(uc => uc.cursos?.nomecurso === selectedCurso)
+    : ucs;
+
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="spinner-border text-success" role="status">
-          <span className="visually-hidden">Carregando...</span>
-        </div>
+      <div className="loading-container">
+        <div className="spinner"></div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid min-vh-100 bg-light d-flex flex-column">
-      {/* Barra superior igual versão Windows */}
-      <div className="bg-success text-white text-center py-3 shadow-sm">
-        <h4 className="m-0">Unidades Curriculares</h4>
+    <div>
+      {/* Header */}
+      <div className="header-bar">
+        Unidades Curriculares
       </div>
 
-      {/* Card central */}
-      <div className="d-flex justify-content-center align-items-center flex-grow-1">
-        <div className="card shadow p-4" style={{ maxWidth: '600px', width: '100%', borderRadius: '12px' }}>
-          <h5 className="text-center mb-3 text-success fw-bold">Cadastrar Nova Unidade Curricular</h5>
+      {/* Main content */}
+      <div className="main-container">
+        <div className="registration-card">
+          {/* Registration form */}
+          <h2 className="form-title">Cadastrar Nova Unidade Curricular</h2>
           <UCSRegistrationForm cursos={cursos} onSubmit={handleUCSSubmit} />
+
+          {/* List section */}
+          <div className="list-section">
+            <h3 className="list-title">Unidades Curriculares Cadastradas</h3>
+            
+            {/* Filter */}
+            <div className="filter-container">
+              <select 
+                className="filter-select"
+                value={selectedCurso}
+                onChange={(e) => setSelectedCurso(e.target.value)}
+              >
+                <option value="">Filtrar por curso: Todos os cursos</option>
+                {cursos.map(curso => (
+                  <option key={curso.idcurso} value={curso.nomecurso}>
+                    Filtrar por curso: {curso.nomecurso}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* UCS List */}
+            <ul className="ucs-list">
+              {filteredUcs.map((uc) => (
+                <li key={uc.iduc} className="ucs-item">
+                  <div className="ucs-name">{uc.nomeuc}</div>
+                  <div className="ucs-details">
+                    Carga horária: {uc.cargahoraria} horas<br />
+                    Curso: {uc.cursos?.nomecurso || 'Sem curso'}
+                  </div>
+                  <div className="action-buttons">
+                    <button className="btn-edit">✏️</button>
+                    <button className="btn-delete">🗑️</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>
