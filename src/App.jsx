@@ -1,10 +1,10 @@
 import React from 'react';
-import UCSRegistrationPage from './pages/UcsRegistrationPage.jsx';
+import HomePage from './pages/home/HomePage.jsx';
 
 function App() {
   return (
     <div className="App">
-      <UCSRegistrationPage />
+      <HomePage />
     </div>
   );
 }

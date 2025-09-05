@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import UCSRegistrationForm from '../components/UcsRegistrationForm.jsx';
+import { ArrowLeft, BookOpen } from 'lucide-react';
+import UcsRegistrationForm from '../components/UcsRegistrationForm.jsx';
 import { supabaseClient } from '../services/supabase.js';
+import '../styles/forms.css';
 
-const UCSRegistrationPage = () => {
+const UCSRegistrationPage = ({ onNavigateHome }) => {
   const [cursos, setCursos] = useState([]);
   const [ucs, setUcs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,63 +69,67 @@ const UCSRegistrationPage = () => {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
+      <div className="ucs-page">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <div>Carregando...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="ucs-page">
       {/* Header */}
-      <div className="header-bar">
-        Unidades Curriculares
+      <div className="ucs-header">
+        <button className="back-button" onClick={onNavigateHome}>
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="ucs-title">Unidades Curriculares</h1>
       </div>
 
-      {/* Main content */}
-      <div className="main-container">
+      <div className="ucs-content">
+        {/* Registration Form */}
         <div className="registration-card">
-          {/* Registration form */}
           <h2 className="form-title">Cadastrar Nova Unidade Curricular</h2>
-          <UCSRegistrationForm cursos={cursos} onSubmit={handleUCSSubmit} />
+          <UcsRegistrationForm cursos={cursos} onSubmit={handleUCSSubmit} />
+        </div>
 
-          {/* List section */}
-          <div className="list-section">
-            <h3 className="list-title">Unidades Curriculares Cadastradas</h3>
-            
-            {/* Filter */}
-            <div className="filter-container">
-              <select 
-                className="filter-select"
-                value={selectedCurso}
-                onChange={(e) => setSelectedCurso(e.target.value)}
-              >
-                <option value="">Filtrar por curso: Todos os cursos</option>
-                {cursos.map(curso => (
-                  <option key={curso.idcurso} value={curso.nomecurso}>
-                    Filtrar por curso: {curso.nomecurso}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* List Section */}
+        <div className="list-section">
+          <h3 className="list-title">Unidades Curriculares Cadastradas</h3>
+          
+          <div className="filter-container">
+            <select 
+              className="filter-select"
+              value={selectedCurso}
+              onChange={(e) => setSelectedCurso(e.target.value)}
+            >
+              <option value="">Filtrar por curso: Todos os cursos</option>
+              {cursos.map(curso => (
+                <option key={curso.idcurso} value={curso.nomecurso}>
+                  Filtrar por curso: {curso.nomecurso}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* UCS List */}
-            <ul className="ucs-list">
-              {filteredUcs.map((uc) => (
-                <li key={uc.iduc} className="ucs-item">
+          <ul className="ucs-list">
+            {filteredUcs.map((uc) => (
+              <li key={uc.iduc} className="ucs-item">
+                <div className="ucs-info">
                   <div className="ucs-name">{uc.nomeuc}</div>
                   <div className="ucs-details">
                     Carga horária: {uc.cargahoraria} horas<br />
                     Curso: {uc.cursos?.nomecurso || 'Sem curso'}
                   </div>
-                  <div className="action-buttons">
-                    <button className="btn-edit">✏️</button>
-                    <button className="btn-delete">🗑️</button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+                </div>
+                <div className="action-buttons">
+                  <button className="btn-edit" title="Editar">✏️</button>
+                  <button className="btn-delete" title="Excluir">🗑️</button>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

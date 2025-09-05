@@ -2,26 +2,27 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 // Mock do supabase para os testes
-jest.mock('../src/services/supabase', () => ({
-    supabaseClient: {
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    order: jest.fn().mockResolvedValue({ data: [], error: null })
+jest.mock('./services/supabase.js', () => ({
+  supabaseClient: {
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        order: jest.fn(() => Promise.resolve({ data: [], error: null }))
+      }))
+    }))
   }
 }));
 
-test('renders UCS registration form', () => {
+test('renders home page correctly', () => {
   render(<App />);
   
-  // Verifica se o título do formulário está presente (texto atualizado)
-  const titleElement = screen.getByText(/Cadastrar Nova Unidade Curricular/i);
-  expect(titleElement).toBeInTheDocument();
+  // Verifica elementos únicos da página inicial
+  expect(screen.getByText('SENAC Catalão')).toBeInTheDocument();
+  expect(screen.getByText('Gestão de Cronogramas')).toBeInTheDocument();
   
-  // Verifica se o campo de nome da UC está presente
-  const nomeInput = screen.getByPlaceholderText(/Programação em Python/i);
-  expect(nomeInput).toBeInTheDocument();
+  // Use getAllByText para elementos que aparecem múltiplas vezes
+  const unidadesElements = screen.getAllByText('Unidades Curriculares');
+  expect(unidadesElements.length).toBeGreaterThan(0);
   
-  // Verifica se o botão de salvar está presente
-  const saveButton = screen.getByText(/Salvar Unidade Curricular/i);
-  expect(saveButton).toBeInTheDocument();
+  const cronogramaElements = screen.getAllByText('Cronograma');
+  expect(cronogramaElements.length).toBeGreaterThan(0);
 });

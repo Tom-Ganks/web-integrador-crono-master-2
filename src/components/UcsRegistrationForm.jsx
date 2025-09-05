@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { BookOpen, Clock, GraduationCap } from 'lucide-react';
 
-const UCSRegistrationForm = ({ cursos = [], onSubmit }) => {
+const UcsRegistrationForm = ({ cursos = [], onSubmit }) => {
   const [formData, setFormData] = useState({
     nomeuc: '',
     cargahoraria: '',
@@ -18,7 +19,6 @@ const UCSRegistrationForm = ({ cursos = [], onSubmit }) => {
       [name]: value
     }));
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -94,9 +94,9 @@ const UCSRegistrationForm = ({ cursos = [], onSubmit }) => {
   return (
     <div>
       <form onSubmit={handleSubmit} noValidate>
-        {/* Nome da UC */}
         <div className="form-group">
           <label htmlFor="nomeuc" className="form-label">
+            <BookOpen size={16} />
             Nome
           </label>
           <input
@@ -106,16 +106,16 @@ const UCSRegistrationForm = ({ cursos = [], onSubmit }) => {
             name="nomeuc"
             value={formData.nomeuc}
             onChange={handleChange}
-            placeholder="Nome"
+            placeholder="Nome da UC"
           />
           {errors.nomeuc && (
             <div className="error-message">{errors.nomeuc}</div>
           )}
         </div>
 
-        {/* Carga Horária */}
         <div className="form-group">
           <label htmlFor="cargahoraria" className="form-label">
+            <Clock size={16} />
             Carga Horária
           </label>
           <input
@@ -127,16 +127,16 @@ const UCSRegistrationForm = ({ cursos = [], onSubmit }) => {
             onChange={handleChange}
             min="1"
             max="500"
-            placeholder="Carga Horária"
+            placeholder="Carga Horária em horas"
           />
           {errors.cargahoraria && (
             <div className="error-message">{errors.cargahoraria}</div>
           )}
         </div>
 
-        {/* Curso */}
         <div className="form-group">
           <label htmlFor="idcurso" className="form-label">
+            <GraduationCap size={16} />
             Curso
           </label>
           <select
@@ -158,7 +158,6 @@ const UCSRegistrationForm = ({ cursos = [], onSubmit }) => {
           )}
         </div>
 
-        {/* Submit button */}
         <button 
           type="submit" 
           className="btn-save"
@@ -168,7 +167,6 @@ const UCSRegistrationForm = ({ cursos = [], onSubmit }) => {
         </button>
       </form>
 
-      {/* Success/Error message */}
       {submitMessage.text && (
         <div className={`message ${submitMessage.type}`}>
           {submitMessage.text}
@@ -178,4 +176,4 @@ const UCSRegistrationForm = ({ cursos = [], onSubmit }) => {
   );
 };
 
-export default UCSRegistrationForm;
+export default UcsRegistrationForm;
