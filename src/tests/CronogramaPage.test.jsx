@@ -4,37 +4,6 @@ import '@testing-library/jest-dom';
 import CronogramaPage from '../pages/CronogramaPage.jsx';
 import { supabaseClient } from '../services/supabase.js';
 
-// Mock Supabase
-jest.mock('../services/supabase.js', () => ({
-  supabaseClient: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        order: jest.fn(() => Promise.resolve({ data: [], error: null })),
-        eq: jest.fn(() => Promise.resolve({ data: [], error: null }))
-      })),
-      insert: jest.fn(() => Promise.resolve({ error: null })),
-      delete: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({ error: null }))
-      }))
-    }))
-  }
-}));
-
-// Mock Lucide React
-jest.mock('lucide-react', () => ({
-  ArrowLeft: ({ size }) => <div data-testid="arrow-left-icon" data-size={size} />,
-  Calendar: ({ size }) => <div data-testid="calendar-icon" data-size={size} />,
-  Filter: ({ size }) => <div data-testid="filter-icon" data-size={size} />,
-  Plus: ({ size }) => <div data-testid="plus-icon" data-size={size} />,
-  Printer: ({ size }) => <div data-testid="printer-icon" data-size={size} />,
-  Clock: ({ size }) => <div data-testid="clock-icon" data-size={size} />,
-  Users: ({ size }) => <div data-testid="users-icon" data-size={size} />,
-  BookOpen: ({ size }) => <div data-testid="book-open-icon" data-size={size} />,
-  X: ({ size }) => <div data-testid="x-icon" data-size={size} />,
-  MapPin: ({ size }) => <div data-testid="map-pin-icon" data-size={size} />,
-  Trash2: ({ size }) => <div data-testid="trash-icon" data-size={size} />,
-}));
-
 // Mock dos dialogs
 jest.mock('../widgets/FeriadosDialog.jsx', () => {
   return function MockFeriadosDialog({ onClose }) {

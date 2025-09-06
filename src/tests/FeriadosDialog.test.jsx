@@ -4,31 +4,6 @@ import '@testing-library/jest-dom';
 import FeriadosDialog from '../widgets/FeriadosDialog.jsx';
 import { supabaseClient } from '../services/supabase.js';
 
-// Mock Supabase
-jest.mock('../services/supabase.js', () => ({
-  supabaseClient: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        order: jest.fn(() => Promise.resolve({ data: [], error: null })),
-        eq: jest.fn(() => Promise.resolve({ data: [], error: null }))
-      })),
-      insert: jest.fn(() => Promise.resolve({ error: null })),
-      delete: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({ error: null }))
-      }))
-    }))
-  }
-}));
-
-// Mock Lucide React
-jest.mock('lucide-react', () => ({
-  Calendar: ({ size }) => <div data-testid="calendar-icon" data-size={size} />,
-  MapPin: ({ size }) => <div data-testid="map-pin-icon" data-size={size} />,
-  X: ({ size }) => <div data-testid="x-icon" data-size={size} />,
-  Plus: ({ size }) => <div data-testid="plus-icon" data-size={size} />,
-  Trash2: ({ size }) => <div data-testid="trash-icon" data-size={size} />,
-}));
-
 const mockFeriadosNacionais = {
   '2025-0-1': '🎉 Ano Novo',
   '2025-11-25': '🎄 Natal'

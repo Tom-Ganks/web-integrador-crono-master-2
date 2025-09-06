@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BookOpen, Clock, GraduationCap } from 'lucide-react';
 
-const UcsRegistrationForm = ({ cursos = [], onSubmit }) => {
+const UcsRegistrationForm = ({ cursos = [], onSubmit, initialData = null, onCancel = null }) => {
   const [formData, setFormData] = useState({
-    nomeuc: '',
-    cargahoraria: '',
-    idcurso: ''
+    nomeuc: initialData?.nomeuc || '',
+    cargahoraria: initialData?.cargahoraria?.toString() || '',
+    idcurso: initialData?.idcurso?.toString() || ''
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        nomeuc: initialData.nomeuc || '',
+        cargahoraria: initialData.cargahoraria?.toString() || '',
+        idcurso: initialData.idcurso?.toString() || ''
+      });
+    }
+  }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,13 +78,15 @@ const UcsRegistrationForm = ({ cursos = [], onSubmit }) => {
       await onSubmit(formData);
       setSubmitMessage({
         type: 'success',
-        text: 'Unidade Curricular registrada com sucesso!'
+        text: initialData ? 'Unidade Curricular atualizada com sucesso!' : 'Unidade Curricular registrada com sucesso!'
       });
-      clearForm();
+      if (!initialData) {
+        clearForm();
+      }
     } catch (error) {
       setSubmitMessage({
         type: 'error',
-        text: `Erro ao registrar UC: ${error.message}`
+        text: `Erro ao ${initialData ? 'atualizar' : 'registrar'} UC: ${error.message}`
       });
     } finally {
       setIsSubmitting(false);
@@ -146,7 +158,7 @@ const UcsRegistrationForm = ({ cursos = [], onSubmit }) => {
             value={formData.idcurso}
             onChange={handleChange}
           >
-            <option value="">Técnico em Informática</option>
+            <option value="">Selecione um curso</option>
             {cursos.map(curso => (
               <option key={curso.idcurso} value={curso.idcurso}>
                 {curso.nomecurso}
@@ -158,13 +170,24 @@ const UcsRegistrationForm = ({ cursos = [], onSubmit }) => {
           )}
         </div>
 
-        <button 
-          type="submit" 
-          className="btn-save"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Salvando...' : '💾 Salvar Unidade Curricular'}
-        </button>
+        <div className="form-actions">
+          {onCancel && (
+            <button 
+              type="button" 
+              className="btn-secondary"
+              onClick={onCancel}
+            >
+              Cancelar
+            </button>
+          )}
+          <button 
+            type="submit" 
+            className="btn-save"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Salvando...' : `💾 ${initialData ? 'Atualizar' : 'Salvar'} Unidade Curricular`}
+          </button>
+        </div>
       </form>
 
       {submitMessage.text && (

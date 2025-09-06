@@ -4,29 +4,6 @@ import '@testing-library/jest-dom';
 import AdicionarAulaDialog from '../widgets/AdicionarAulaDialog.jsx';
 import { supabaseClient } from '../services/supabase.js';
 
-// Mock Supabase
-jest.mock('../services/supabase.js', () => ({
-  supabaseClient: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        order: jest.fn(() => Promise.resolve({ data: [], error: null })),
-        eq: jest.fn(() => Promise.resolve({ data: [], error: null }))
-      })),
-      insert: jest.fn(() => Promise.resolve({ error: null })),
-      delete: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({ error: null }))
-      }))
-    }))
-  }
-}));
-
-// Mock Lucide React
-jest.mock('lucide-react', () => ({
-  Users: ({ size }) => <div data-testid="users-icon" data-size={size} />,
-  BookOpen: ({ size }) => <div data-testid="book-open-icon" data-size={size} />,
-  Clock: ({ size }) => <div data-testid="clock-icon" data-size={size} />,
-  X: ({ size }) => <div data-testid="x-icon" data-size={size} />,
-}));
 
 const mockSelectedDays = new Set([new Date('2025-01-15').getTime()]);
 

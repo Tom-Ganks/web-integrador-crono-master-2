@@ -18,6 +18,10 @@ const CronogramaPage = ({ onNavigateHome }) => {
   const [showAdicionarAulaDialog, setShowAdicionarAulaDialog] = useState(false);
   const [feriadosNacionais, setFeriadosNacionais] = useState({});
   const [feriadosMunicipais, setFeriadosMunicipais] = useState({});
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [aulaToDelete, setAulaToDelete] = useState(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [aulaToEdit, setAulaToEdit] = useState(null);
 
   const monthNames = [
     'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
@@ -204,6 +208,59 @@ const CronogramaPage = ({ onNavigateHome }) => {
     }
   };
 
+  // Handler functions for edit and delete
+  const handleEditAula = (aula) => {
+    setAulaToEdit(aula);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteAula = (aula) => {
+    setAulaToDelete(aula);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteAula = async () => {
+    if (!aulaToDelete) return;
+
+    try {
+      const { error } = await supabaseClient
+        .from('aulas')
+        .delete()
+        .eq('idaula', aulaToDelete.idaula);
+
+      if (error) throw error;
+      
+      await loadAulas();
+      setShowDeleteDialog(false);
+      setAulaToDelete(null);
+    } catch (error) {
+      console.error('Erro ao deletar aula:', error);
+      alert('Erro ao deletar aula: ' + error.message);
+    }
+  };
+
+  const handleEditSubmit = async (aulaData) => {
+    try {
+      const { error } = await supabaseClient
+        .from('aulas')
+        .update({
+          horario: aulaData.horario,
+          horas: aulaData.horas,
+          status: aulaData.status
+        })
+        .eq('idaula', aulaToEdit.idaula);
+
+      if (error) throw error;
+      
+      await loadAulas();
+      setShowEditDialog(false);
+      setAulaToEdit(null);
+    } catch (error) {
+      console.error('Erro ao atualizar aula:', error);
+      alert('Erro ao atualizar aula: ' + error.message);
+    }
+  };
+
   const handleAdicionarAula = async (aulaData) => {
     try {
       const aulasParaInserir = Array.from(aulaData.dias).map(day => ({
@@ -364,6 +421,56 @@ const CronogramaPage = ({ onNavigateHome }) => {
             {selectedDays.size > 0 && (
               <p>{selectedDays.size} dia(s) selecionado(s)</p>
             )}
+            
+            {/* Display events for selected day */}
+            {selectedDay && getEventsForDay(selectedDay).length > 0 && (
+              <div className="day-events">
+                <h4>Aulas agendadas:</h4>
+                {getEventsForDay(selectedDay).map((aula, idx) => (
+                  <div key={idx} className="event-item">
+                    <div className="event-info">
+                      <strong>{aula.unidades_curriculares?.nomeuc}</strong>
+                      <br />
+                      Horário: {aula.horario} | {aula.horas}h | {aula.status}
+                      <br />
+                      Turma: {aula.turma?.turma}
+                    </div>
+                    <div className="event-actions">
+                      <button
+                        onClick={() => handleEditAula(aula)}
+                        style={{
+                          background: '#20b2aa',
+                          color: 'white',
+                          border: 'none',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '10px',
+                          marginRight: '4px'
+                        }}
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAula(aula)}
+                        style={{
+                          background: '#dc3545',
+                          color: 'white',
+                          border: 'none',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '10px'
+                        }}
+                      >
+                        🗑️ Excluir
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
             {getEventsForDay(selectedDay).length === 0 && selectedDay && (
               <p>Nenhuma aula agendada</p>
             )}
@@ -398,7 +505,120 @@ const CronogramaPage = ({ onNavigateHome }) => {
           onAulaAdded={handleAdicionarAula}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="dialog-overlay" onClick={() => setShowDeleteDialog(false)}>
+          <div className="dialog-content" onClick={e => e.stopPropagation()}>
+            <div className="dialog-header">
+              <h2>Confirmar Exclusão</h2>
+            </div>
+            <div className="dialog-body">
+              <p>Tem certeza que deseja apagar essa aula?</p>
+              <p><strong>{aulaToDelete?.unidades_curriculares?.nomeuc}</strong></p>
+              <p>Horário: {aulaToDelete?.horario}</p>
+              <p>Horas: {aulaToDelete?.horas}h</p>
+            </div>
+            <div className="dialog-actions">
+              <button 
+                className="btn-secondary"
+                onClick={() => setShowDeleteDialog(false)}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn-danger"
+                onClick={confirmDeleteAula}
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Aula Dialog */}
+      {showEditDialog && aulaToEdit && (
+        <div className="dialog-overlay" onClick={() => setShowEditDialog(false)}>
+          <div className="dialog-content" onClick={e => e.stopPropagation()}>
+            <div className="dialog-header">
+              <h2>Editar Aula</h2>
+            </div>
+            <div className="dialog-body">
+              <EditAulaForm 
+                aula={aulaToEdit}
+                onSubmit={handleEditSubmit}
+                onCancel={() => setShowEditDialog(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+};
+
+const EditAulaForm = ({ aula, onSubmit, onCancel }) => {
+  const [formData, setFormData] = useState({
+    horario: aula.horario || '',
+    horas: aula.horas || 1,
+    status: aula.status || 'Agendada'
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="form-group">
+        <label>Horário:</label>
+        <select
+          value={formData.horario}
+          onChange={(e) => setFormData({...formData, horario: e.target.value})}
+          className="form-select"
+        >
+          <option value="08:00-12:00">Matutino (08:00-12:00)</option>
+          <option value="14:00-18:00">Vespertino (14:00-18:00)</option>
+          <option value="19:00-22:00">Noturno (19:00-22:00)</option>
+        </select>
+      </div>
+      
+      <div className="form-group">
+        <label>Horas:</label>
+        <input
+          type="number"
+          min="1"
+          max="8"
+          value={formData.horas}
+          onChange={(e) => setFormData({...formData, horas: parseInt(e.target.value)})}
+          className="form-input"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Status:</label>
+        <select
+          value={formData.status}
+          onChange={(e) => setFormData({...formData, status: e.target.value})}
+          className="form-select"
+        >
+          <option value="Agendada">Agendada</option>
+          <option value="Realizada">Realizada</option>
+          <option value="Cancelada">Cancelada</option>
+        </select>
+      </div>
+      
+      <div className="dialog-actions">
+        <button type="button" onClick={onCancel} className="btn-secondary">
+          Cancelar
+        </button>
+        <button type="submit" className="btn-primary">
+          Salvar
+        </button>
+      </div>
+    </form>
   );
 };
 
