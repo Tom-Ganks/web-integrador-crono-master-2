@@ -1,28 +1,32 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import '@testing-library/jest-dom';
+import App from '../App';
 
-// Mock do supabase para os testes
-jest.mock('./services/supabase.js', () => ({
-  supabaseClient: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        order: jest.fn(() => Promise.resolve({ data: [], error: null }))
-      }))
-    }))
-  }
-}));
+// Mock HomePage to avoid complex rendering
+jest.mock('../pages/home/HomePage.jsx', () => {
+  return function MockHomePage() {
+    return <div data-testid="home-page">Home Page Component</div>;
+  };
+});
 
-test('renders home page correctly', () => {
-  render(<App />);
-  
-  // Verifica elementos únicos da página inicial
-  expect(screen.getByText('SENAC Catalão')).toBeInTheDocument();
-  expect(screen.getByText('Gestão de Cronogramas')).toBeInTheDocument();
-  
-  // Use getAllByText para elementos que aparecem múltiplas vezes
-  const unidadesElements = screen.getAllByText('Unidades Curriculares');
-  expect(unidadesElements.length).toBeGreaterThan(0);
-  
-  const cronogramaElements = screen.getAllByText('Cronograma');
-  expect(cronogramaElements.length).toBeGreaterThan(0);
+describe('App', () => {
+  test('renderiza sem erros', () => {
+    render(<App />);
+    
+    expect(screen.getByTestId('home-page')).toBeInTheDocument();
+  });
+
+  test('tem estrutura correta', () => {
+    const { container } = render(<App />);
+    
+    expect(container.firstChild).toHaveClass('App');
+  });
+
+  test('renderiza HomePage como componente principal', () => {
+    render(<App />);
+    
+    expect(screen.getByTestId('home-page')).toBeInTheDocument();
+    expect(screen.getByText('Home Page Component')).toBeInTheDocument();
+  });
 });

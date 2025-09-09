@@ -45,35 +45,47 @@ const mockAulas = [
 ];
 
 describe('CronogramaPage', () => {
+  const mockOnNavigateHome = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2025-01-15'));
-
-    supabaseClient.from.mockImplementation((table) => {
-      const mockResponse = {
-        turma: { data: mockTurmas, error: null },
-        aulas: { data: mockAulas, error: null },
-        feriadosmunicipais: { data: [], error: null },
-        cursos: { data: [{ idcurso: 1, nomecurso: 'Programação em Python' }], error: null },
-        ucs: { data: [{ iduc: 1, nomeuc: 'Banco de Dados' }], error: null }
-      };
-
-      return {
-        select: jest.fn(() => ({
-          order: jest.fn(() => Promise.resolve(mockResponse[table] || { data: [], error: null }))
-        }))
-      };
-    });
+    console.error.mockClear();
   });
 
   afterEach(() => {
     jest.useRealTimers();
   });
 
+  const setupSuccessfulMocks = () => {
+    supabaseClient.from.mockImplementation((table) => {
+      const mockResponse = {
+        turma: { data: mockTurmas, error: null },
+        aulas: { data: mockAulas, error: null },
+        feriadosmunicipais: { data: [], error: null }
+      };
+
+      return {
+        select: jest.fn(() => ({
+          order: jest.fn(() => Promise.resolve(mockResponse[table] || { data: [], error: null }))
+        })),
+        insert: jest.fn(() => Promise.resolve({ data: [], error: null })),
+        update: jest.fn(() => ({
+          eq: jest.fn(() => Promise.resolve({ data: [], error: null }))
+        })),
+        delete: jest.fn(() => ({
+          eq: jest.fn(() => Promise.resolve({ data: [], error: null }))
+        }))
+      };
+    });
+  };
+
   test('renderiza estrutura principal do cronograma', async () => {
+    setupSuccessfulMocks();
+
     await act(async () => {
-      render(<CronogramaPage />);
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
     });
 
     await waitFor(() => {
@@ -83,9 +95,19 @@ describe('CronogramaPage', () => {
     });
   });
 
-  test('carrega turmas e aulas do banco de dados', async () => {
+  test('exibe estado de carregamento inicialmente', () => {
+    setupSuccessfulMocks();
+    
+    render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    
+    expect(screen.getByText('Carregando...')).toBeInTheDocument();
+  });
+
+  test('carrega dados do Supabase', async () => {
+    setupSuccessfulMocks();
+
     await act(async () => {
-      render(<CronogramaPage />);
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
     });
 
     await waitFor(() => {
@@ -96,8 +118,10 @@ describe('CronogramaPage', () => {
   });
 
   test('renderiza dias da semana em português', async () => {
+    setupSuccessfulMocks();
+
     await act(async () => {
-      render(<CronogramaPage />);
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
     });
 
     await waitFor(() => {
@@ -112,28 +136,276 @@ describe('CronogramaPage', () => {
     });
   });
 
-  test('FAB fica habilitado quando dia é selecionado', async () => {
+  test('navega entre meses', async () => {
+    setupSuccessfulMocks();
+
     await act(async () => {
-      render(<CronogramaPage />);
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('JANEIRO 2025')).toBeInTheDocument();
+      
+      const nextButton = screen.getByText('›');
+      fireEvent.click(nextButton);
+      
+      expect(screen.getByText('FEVEREIRO 2025')).toBeInTheDocument();
+    });
+  });
+
+  test('seleciona dia único ao clicar', async () => {
+    setupSuccessfulMocks();
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
     });
 
     await waitFor(() => {
       const dayElement = screen.getByText('15');
       fireEvent.click(dayElement);
+      
+      expect(screen.getByText(/quarta-feira, 15 de janeiro de 2025/)).toBeInTheDocument();
+    });
+  });
+
+  test('seleciona múltiplos dias com Ctrl+Click', async () => {
+    setupSuccessfulMocks();
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      const day15 = screen.getByText('15');
+      const day16 = screen.getByText('16');
+      
+      fireEvent.click(day15, { ctrlKey: true });
+      fireEvent.click(day16, { ctrlKey: true });
+      
+      expect(screen.getByText('2 dia(s) selecionado(s)')).toBeInTheDocument();
+    });
+  });
+
+  test('FAB fica habilitado quando dia é selecionado', async () => {
+    setupSuccessfulMocks();
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
       const fab = screen.getByTitle('Agendar Aulas');
+      expect(fab).toBeDisabled();
+      
+      const dayElement = screen.getByText('15');
+      fireEvent.click(dayElement);
+      
       expect(fab).not.toBeDisabled();
     });
   });
 
-  test('filtra turmas corretamente', async () => {
+  test('filtra aulas por turma', async () => {
+    setupSuccessfulMocks();
+
     await act(async () => {
-      render(<CronogramaPage />);
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
     });
 
     await waitFor(() => {
       const filterSelect = screen.getByDisplayValue('Todas as Turmas');
       fireEvent.change(filterSelect, { target: { value: '1' } });
+      
       expect(filterSelect.value).toBe('1');
+    });
+  });
+
+  test('abre dialog de feriados', async () => {
+    setupSuccessfulMocks();
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      const feriadosButton = screen.getByTitle('Gerenciar Feriados');
+      fireEvent.click(feriadosButton);
+      
+      expect(screen.getByTestId('feriados-dialog')).toBeInTheDocument();
+    });
+  });
+
+  test('abre dialog de adicionar aula', async () => {
+    setupSuccessfulMocks();
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      const dayElement = screen.getByText('15');
+      fireEvent.click(dayElement);
+      
+      const fab = screen.getByTitle('Agendar Aulas');
+      fireEvent.click(fab);
+      
+      expect(screen.getByTestId('aula-dialog')).toBeInTheDocument();
+    });
+  });
+
+  test('exibe aulas agendadas para o dia selecionado', async () => {
+    setupSuccessfulMocks();
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      const dayElement = screen.getByText('15');
+      fireEvent.click(dayElement);
+      
+      expect(screen.getByText('Aulas agendadas:')).toBeInTheDocument();
+      expect(screen.getByText('Programação Web')).toBeInTheDocument();
+      expect(screen.getByText(/Horário: 08:00-12:00/)).toBeInTheDocument();
+    });
+  });
+
+  test('abre dialog de edição de aula', async () => {
+    setupSuccessfulMocks();
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      const dayElement = screen.getByText('15');
+      fireEvent.click(dayElement);
+      
+      const editButton = screen.getByText('✏️ Editar');
+      fireEvent.click(editButton);
+      
+      expect(screen.getByText('Editar Aula')).toBeInTheDocument();
+    });
+  });
+
+  test('abre dialog de confirmação de exclusão', async () => {
+    setupSuccessfulMocks();
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      const dayElement = screen.getByText('15');
+      fireEvent.click(dayElement);
+      
+      const deleteButton = screen.getByText('🗑️ Excluir');
+      fireEvent.click(deleteButton);
+      
+      expect(screen.getByText('Confirmar Exclusão')).toBeInTheDocument();
+    });
+  });
+
+  test('chama window.print ao clicar no botão imprimir', async () => {
+    setupSuccessfulMocks();
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      const printButton = screen.getByTitle('Imprimir');
+      fireEvent.click(printButton);
+      
+      expect(global.print).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  test('navega para home ao clicar no botão voltar', async () => {
+    setupSuccessfulMocks();
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      const backButton = screen.getByTestId('arrow-left-icon').closest('button');
+      fireEvent.click(backButton);
+      
+      expect(mockOnNavigateHome).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // Supabase Connection Failure Tests
+  test('lida com falha de conexão ao carregar turmas', async () => {
+    supabaseClient.from.mockImplementation((table) => {
+      if (table === 'turma') {
+        return {
+          select: jest.fn(() => ({
+            order: jest.fn(() => Promise.resolve({ data: null, error: new Error('Falha de conexão') }))
+          }))
+        };
+      }
+      return {
+        select: jest.fn(() => ({
+          order: jest.fn(() => Promise.resolve({ data: [], error: null }))
+        }))
+      };
+    });
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      expect(console.error).toHaveBeenCalledWith('Erro ao carregar turmas:', expect.any(Error));
+    });
+  });
+
+  test('lida com falha de conexão ao carregar aulas', async () => {
+    supabaseClient.from.mockImplementation((table) => {
+      if (table === 'aulas') {
+        return {
+          select: jest.fn(() => ({
+            order: jest.fn(() => Promise.resolve({ data: null, error: new Error('Falha de conexão') }))
+          }))
+        };
+      }
+      return {
+        select: jest.fn(() => ({
+          order: jest.fn(() => Promise.resolve({ data: [], error: null }))
+        }))
+      };
+    });
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      expect(console.error).toHaveBeenCalledWith('Erro ao carregar aulas:', expect.any(Error));
+    });
+  });
+
+  test('lida com falha de conexão ao carregar feriados municipais', async () => {
+    supabaseClient.from.mockImplementation((table) => {
+      if (table === 'feriadosmunicipais') {
+        return {
+          select: jest.fn(() => Promise.resolve({ data: null, error: new Error('Falha de conexão') }))
+        };
+      }
+      return {
+        select: jest.fn(() => ({
+          order: jest.fn(() => Promise.resolve({ data: [], error: null }))
+        }))
+      };
+    });
+
+    await act(async () => {
+      render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
+    });
+
+    await waitFor(() => {
+      expect(console.error).toHaveBeenCalledWith('Erro ao carregar feriados municipais:', expect.any(Error));
     });
   });
 });

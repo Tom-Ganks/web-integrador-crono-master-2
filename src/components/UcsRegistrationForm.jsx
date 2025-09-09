@@ -48,8 +48,11 @@ const UcsRegistrationForm = ({ cursos = [], onSubmit, initialData = null, onCanc
 
     if (!formData.cargahoraria) {
       newErrors.cargahoraria = 'Carga horária é obrigatória';
-    } else if (parseInt(formData.cargahoraria) < 1 || parseInt(formData.cargahoraria) > 500) {
-      newErrors.cargahoraria = 'Carga horária deve estar entre 1 e 500 horas';
+    } else {
+      const cargaHorariaNum = parseInt(formData.cargahoraria);
+      if (cargaHorariaNum < 1 || cargaHorariaNum > 2000) {
+        newErrors.cargahoraria = 'Carga horária deve estar entre 1 e 2000 horas';
+      }
     }
 
     if (!formData.idcurso) {
@@ -59,10 +62,9 @@ const UcsRegistrationForm = ({ cursos = [], onSubmit, initialData = null, onCanc
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       setSubmitMessage({
         type: 'error',
@@ -74,8 +76,16 @@ const UcsRegistrationForm = ({ cursos = [], onSubmit, initialData = null, onCanc
     setIsSubmitting(true);
     setSubmitMessage({ type: '', text: '' });
 
+
     try {
-      await onSubmit(formData);
+      // Converter para números antes de enviar
+      const dataToSubmit = {
+        nomeuc: formData.nomeuc,
+         cargahoraria: parseInt(formData.cargahoraria),
+         idcurso: parseInt(formData.idcurso) 
+      };
+
+      await onSubmit(dataToSubmit);
       setSubmitMessage({
         type: 'success',
         text: initialData ? 'Unidade Curricular atualizada com sucesso!' : 'Unidade Curricular registrada com sucesso!'
@@ -100,7 +110,6 @@ const UcsRegistrationForm = ({ cursos = [], onSubmit, initialData = null, onCanc
       idcurso: ''
     });
     setErrors({});
-    setSubmitMessage({ type: '', text: '' });
   };
 
   return (
@@ -172,16 +181,16 @@ const UcsRegistrationForm = ({ cursos = [], onSubmit, initialData = null, onCanc
 
         <div className="form-actions">
           {onCancel && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn-secondary"
               onClick={onCancel}
             >
               Cancelar
             </button>
           )}
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="btn-save"
             disabled={isSubmitting}
           >

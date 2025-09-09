@@ -5,6 +5,7 @@ import { supabaseClient } from '../services/supabase.js';
 import '../styles/forms.css';
 
 const UCSRegistrationPage = ({ onNavigateHome }) => {
+  const [errorMessage, setErrorMessage] = useState('');
   const [cursos, setCursos] = useState([]);
   const [ucs, setUcs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +91,7 @@ const UCSRegistrationPage = ({ onNavigateHome }) => {
         .eq('iduc', ucToDelete.iduc);
 
       if (error) throw error;
-      
+
       await loadUcs();
       setShowDeleteDialog(false);
       setUcToDelete(null);
@@ -101,27 +102,28 @@ const UCSRegistrationPage = ({ onNavigateHome }) => {
   };
 
   const handleEditSubmit = async (ucsData) => {
-    try {
-      const { error } = await supabaseClient
-        .from('unidades_curriculares')
-        .update({
-          nomeuc: ucsData.nomeuc,
-          cargahoraria: parseInt(ucsData.cargahoraria),
-          idcurso: parseInt(ucsData.idcurso)
-        })
-        .eq('iduc', editingUc.iduc);
+  try {
+    const { error } = await supabaseClient
+      .from('unidades_curriculares')
+      .update({
+        nomeuc: ucsData.nomeuc,
+        cargahoraria: parseInt(ucsData.cargahoraria),
+        idcurso: parseInt(ucsData.idcurso)
+      })
+      .eq('iduc', editingUc.iduc);
 
-      if (error) throw error;
-      
-      await loadUcs();
-      setEditingUc(null);
-    } catch (error) {
-      console.error('Erro ao atualizar UC:', error);
-      throw error;
-    }
-  };
+    if (error) throw error;
 
-  const filteredUcs = selectedCurso 
+    await loadUcs();
+    setEditingUc(null);
+    setErrorMessage(''); // Limpa mensagens de erro anteriores
+  } catch (error) {
+    console.error('Erro ao atualizar UC:', error);
+    setErrorMessage(`Erro ao atualizar UC: ${error.message}`);
+  }
+};
+
+  const filteredUcs = selectedCurso
     ? ucs.filter(uc => uc.cursos?.nomecurso === selectedCurso)
     : ucs;
 
@@ -139,7 +141,11 @@ const UCSRegistrationPage = ({ onNavigateHome }) => {
     <div className="ucs-page">
       {/* Header */}
       <div className="ucs-header">
-        <button className="back-button" onClick={onNavigateHome}>
+        <button
+          className="back-button"
+          onClick={onNavigateHome}
+          data-testid="arrow-left-icon"
+        >
           <ArrowLeft size={20} />
         </button>
         <h1 className="ucs-title">Unidades Curriculares</h1>
@@ -151,8 +157,8 @@ const UCSRegistrationPage = ({ onNavigateHome }) => {
           <h2 className="form-title">
             {editingUc ? 'Editar Unidade Curricular' : 'Cadastrar Nova Unidade Curricular'}
           </h2>
-          <UcsRegistrationForm 
-            cursos={cursos} 
+          <UcsRegistrationForm
+            cursos={cursos}
             onSubmit={editingUc ? handleEditSubmit : handleUCSSubmit}
             initialData={editingUc}
             onCancel={editingUc ? () => setEditingUc(null) : null}
@@ -162,9 +168,9 @@ const UCSRegistrationPage = ({ onNavigateHome }) => {
         {/* List Section */}
         <div className="list-section">
           <h3 className="list-title">Unidades Curriculares Cadastradas</h3>
-          
+
           <div className="filter-container">
-            <select 
+            <select
               className="filter-select"
               value={selectedCurso}
               onChange={(e) => setSelectedCurso(e.target.value)}
@@ -189,15 +195,15 @@ const UCSRegistrationPage = ({ onNavigateHome }) => {
                   </div>
                 </div>
                 <div className="action-buttons">
-                  <button 
-                    className="btn-edit" 
+                  <button
+                    className="btn-edit"
                     title="Editar"
                     onClick={() => handleEdit(uc)}
                   >
                     ✏️
                   </button>
-                  <button 
-                    className="btn-delete" 
+                  <button
+                    className="btn-delete"
                     title="Excluir"
                     onClick={() => handleDelete(uc)}
                   >
@@ -222,13 +228,13 @@ const UCSRegistrationPage = ({ onNavigateHome }) => {
               <p><strong>{ucToDelete?.nomeuc}</strong></p>
             </div>
             <div className="dialog-actions">
-              <button 
+              <button
                 className="btn-secondary"
                 onClick={() => setShowDeleteDialog(false)}
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 className="btn-danger"
                 onClick={confirmDelete}
               >
