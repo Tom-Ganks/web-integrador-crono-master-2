@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import App from '../App';
+import App from '../src/App';
 
 // Mock HomePage to avoid complex rendering
 jest.mock('../pages/home/HomePage.jsx', () => {

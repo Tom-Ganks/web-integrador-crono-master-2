@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Calendar, MapPin, X, Plus, Trash2 } from 'lucide-react';
-import { supabaseClient } from '../services/supabase.js';
+import React, { useState, useEffect } from 'react';
+ import { Calendar, MapPin, X, Plus, Trash2 } from 'lucide-react';
+ import { supabaseClient } from '../services/supabase.js';
 
 const FeriadosDialog = ({ feriadosNacionais, feriadosMunicipais, onClose, onFeriadoAdded }) => {
   const [feriadosMunicipaisLocal, setFeriadosMunicipaisLocal] = useState(feriadosMunicipais);
@@ -23,7 +23,6 @@ const FeriadosDialog = ({ feriadosNacionais, feriadosMunicipais, onClose, onFeri
 
       if (error) throw error;
 
-      // Update local state
       const date = new Date(newFeriado.data);
       const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
       setFeriadosMunicipaisLocal(prev => ({
@@ -81,16 +80,15 @@ const FeriadosDialog = ({ feriadosNacionais, feriadosMunicipais, onClose, onFeri
 
   return (
     <div className="dialog-overlay" onClick={onClose}>
-      <div className="dialog-content feriados-dialog" onClick={e => e.stopPropagation()}>
+      <div className="dialog-content feriados-dialog" role="dialog" aria-labelledby="dialog-title" onClick={e => e.stopPropagation()}>
         <div className="dialog-header">
-          <h2>Gerenciar Feriados</h2>
+          <h2 id="dialog-title">Gerenciar Feriados</h2>
           <button className="btn-close" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
 
         <div className="feriados-content">
-          {/* Feriados Nacionais */}
           <div className="feriados-section">
             <div className="section-header">
               <Calendar size={20} />
@@ -108,13 +106,14 @@ const FeriadosDialog = ({ feriadosNacionais, feriadosMunicipais, onClose, onFeri
             </div>
           </div>
 
-          {/* Feriados Municipais */}
           <div className="feriados-section">
             <div className="section-header">
               <MapPin size={20} />
               <h3>Feriados Municipais</h3>
               <button 
                 className="btn-add"
+                role="button"
+                aria-label="Adicionar feriado municipal"
                 onClick={() => setShowAddForm(!showAddForm)}
               >
                 <Plus size={16} />
@@ -122,7 +121,7 @@ const FeriadosDialog = ({ feriadosNacionais, feriadosMunicipais, onClose, onFeri
             </div>
 
             {showAddForm && (
-              <form onSubmit={handleAddFeriado} className="add-feriado-form">
+              <form onSubmit={handleAddFeriado} className="add-feriado-form" role="form">
                 <input
                   type="text"
                   placeholder="Nome do feriado"
@@ -159,6 +158,8 @@ const FeriadosDialog = ({ feriadosNacionais, feriadosMunicipais, onClose, onFeri
                     </div>
                     <button 
                       className="btn-remove"
+                      role="button"
+                      aria-label={`Remover feriado ${nome}`}
                       onClick={() => handleRemoveFeriado(dateKey, nome)}
                     >
                       <Trash2 size={16} />
