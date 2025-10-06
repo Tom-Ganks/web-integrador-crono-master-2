@@ -1,9 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import HomePage from '../pages/home/HomePage.jsx';
-
-
 
 // Simula os componentes filhos para evitar renderização complexa
 jest.mock('../pages/cronograma/CronogramaPage.jsx', () => {
@@ -23,6 +21,39 @@ jest.mock('../pages/ucsregisterpage/UcsRegistrationPage.jsx', () => {
       <div data-testid="ucs-page">
         <button onClick={onNavigateHome}>Voltar</button>
         <h1>UCS Page</h1>
+      </div>
+    );
+  };
+});
+
+jest.mock('../../components/CadastroDeCurso.jsx', () => {
+  return function MockCadastroDeCurso({ onNavigateHome }) {
+    return (
+      <div data-testid="curso-page">
+        <button onClick={onNavigateHome}>Voltar</button>
+        <h1>Curso Page</h1>
+      </div>
+    );
+  };
+});
+
+jest.mock('../../components/CadastroDeInstrutor.jsx', () => {
+  return function MockCadastroDeInstrutor({ onNavigateHome }) {
+    return (
+      <div data-testid="instrutor-page">
+        <button onClick={onNavigateHome}>Voltar</button>
+        <h1>Instrutor Page</h1>
+      </div>
+    );
+  };
+});
+
+jest.mock('../../components/CadastroDeTurma.jsx', () => {
+  return function MockCadastroDeTurma({ onNavigateHome }) {
+    return (
+      <div data-testid="turma-page">
+        <button onClick={onNavigateHome}>Voltar</button>
+        <h1>Turma Page</h1>
       </div>
     );
   };
@@ -187,20 +218,22 @@ describe('HomePage', () => {
     // Botão do menu (já tem data-testid no JSX)
     expect(screen.getByTestId('menu-button')).toBeInTheDocument();
 
-    // Botão de notificações (tem title no JSX)
-    expect(screen.getByTitle('Notificações')).toBeInTheDocument();
+    // Verifica se há ícones nos cards do menu
+    const menuCards = document.querySelectorAll('.menu-card');
+    expect(menuCards.length).toBeGreaterThan(0);
 
-    // Ícones de usuário (pela classe usada no JSX)
-    expect(document.querySelectorAll('.user-avatar').length).toBeGreaterThan(0);
-
-    // Ícone de capelo de formatura (GraduationCapIcon) — usa classe "logo-icon"
-    expect(document.querySelectorAll('.logo-icon').length).toBeGreaterThan(0);
+    // Verifica se há ícones com as classes corretas
+    const menuIcons = document.querySelectorAll('.menu-icon');
+    expect(menuIcons.length).toBeGreaterThan(0);
   });
 
   test('renderiza descrições dos cards', () => {
     render(<HomePage />);
 
     expect(screen.getByText('Cadastre e gerencie as unidades curriculares dos cursos')).toBeInTheDocument();
+    expect(screen.getByText('Cadastre e gerencie os cursos oferecidos')).toBeInTheDocument();
+    expect(screen.getByText('Cadastre e gerencie os instrutores')).toBeInTheDocument();
+    expect(screen.getByText('Cadastre e gerencie as turmas')).toBeInTheDocument();
     expect(screen.getByText('Visualize e gerencie o cronograma de aulas')).toBeInTheDocument();
   });
 
@@ -246,6 +279,9 @@ describe('HomePage', () => {
     // Verifica se os elementos de navegação estão presentes
     expect(screen.getByText('Página Inicial')).toBeInTheDocument();
     expect(screen.getAllByText('Unidades Curriculares').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Cursos').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Instrutores').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Turmas').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Cronograma').length).toBeGreaterThan(0);
   });
 
@@ -255,10 +291,6 @@ describe('HomePage', () => {
     // Verifica se o botão de menu está presente
     const menuButton = screen.getByTestId('menu-button');
     expect(menuButton).toBeInTheDocument();
-
-    // Verifica se o botão de notificações está presente
-    const notificationButton = screen.getByTitle('Notificações');
-    expect(notificationButton).toBeInTheDocument();
   });
 
   test('renderiza cards com classes CSS corretas', () => {
@@ -266,13 +298,19 @@ describe('HomePage', () => {
 
     // Verifica se os cards têm as classes corretas
     const menuCards = document.querySelectorAll('.menu-card');
-    expect(menuCards.length).toBe(2);
+    expect(menuCards.length).toBe(5);
 
     // Verifica se os ícones dos cards têm as classes corretas
-    const purpleIcon = document.querySelector('.menu-icon.purple');
+    const tealIcon = document.querySelector('.menu-icon.teal');
+    const blueIcon = document.querySelector('.menu-icon.blue');
+    const greenIcon = document.querySelector('.menu-icon.green');
+    const amberIcon = document.querySelector('.menu-icon.amber');
     const orangeIcon = document.querySelector('.menu-icon.orange');
-    
-    expect(purpleIcon).toBeInTheDocument();
+
+    expect(tealIcon).toBeInTheDocument();
+    expect(blueIcon).toBeInTheDocument();
+    expect(greenIcon).toBeInTheDocument();
+    expect(amberIcon).toBeInTheDocument();
     expect(orangeIcon).toBeInTheDocument();
   });
 

@@ -42,7 +42,6 @@ const FeriadosDialog = ({ feriadosNacionais, feriadosMunicipais, onClose, onFeri
     }
   };
 
-
   const handleRemoveFeriado = async (dateKey, nome) => {
     const date = new Date(parseInt(dateKey.split('-')[0]), parseInt(dateKey.split('-')[1]), parseInt(dateKey.split('-')[2]));
     const formattedDate = date.toISOString().split('T')[0];
@@ -133,9 +132,9 @@ const FeriadosDialog = ({ feriadosNacionais, feriadosMunicipais, onClose, onFeri
                 />
                 <input
                   type="date"
-                  required
                   value={newFeriado.data}
-                  onChange={(e) => setNewFeriado({ ...newFeriado, data: e.target.value })}
+                  onChange={(e) => setNewFeriado(prev => ({ ...prev, data: e.target.value }))}
+                  required
                   data-testid="data-input"
                 />
                 <div className="form-actions">

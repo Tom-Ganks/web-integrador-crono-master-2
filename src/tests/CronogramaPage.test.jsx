@@ -40,7 +40,7 @@ const mockAulas = [
     status: 'Agendada',
     horas: 4,
     unidades_curriculares: { nomeuc: 'Programação Web' },
-    turma: { turma: 'Turma A' }
+    turma: { turmanome: 'Turma A' }
   }
 ];
 
@@ -254,59 +254,6 @@ describe('CronogramaPage', () => {
       expect(screen.getByTestId('aula-dialog')).toBeInTheDocument();
     });
   });
-
-  // test('exibe aulas agendadas para o dia selecionado', async () => {
-  //   setupSuccessfulMocks();
-
-  //   await act(async () => {
-  //     render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
-  //   });
-
-  //   await waitFor(() => {
-  //     const dayElement = screen.getByText('15');
-  //     fireEvent.click(dayElement);
-
-  //     expect(screen.getByText('Aulas agendadas:')).toBeInTheDocument();
-  //     expect(screen.getByText('Programação Web')).toBeInTheDocument();
-  //     expect(screen.getByText(/Horário: 08:00-12:00/)).toBeInTheDocument();
-  //   });
-  // });
-
-  // test('abre dialog de edição de aula', async () => {
-  //   setupSuccessfulMocks();
-
-  //   await act(async () => {
-  //     render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
-  //   });
-
-  //   await waitFor(() => {
-  //     const dayElement = screen.getByText('15');
-  //     fireEvent.click(dayElement);
-
-  //     const editButton = screen.getByText('✏️ Editar');
-  //     fireEvent.click(editButton);
-
-  //     expect(screen.getByText('Editar Aula')).toBeInTheDocument();
-  //   });
-  // });
-
-  // test('abre dialog de confirmação de exclusão', async () => {
-  //   setupSuccessfulMocks();
-
-  //   await act(async () => {
-  //     render(<CronogramaPage onNavigateHome={mockOnNavigateHome} />);
-  //   });
-
-  //   await waitFor(() => {
-  //     const dayElement = screen.getByText('15');
-  //     fireEvent.click(dayElement);
-
-  //     const deleteButton = screen.getByText('🗑️ Excluir');
-  //     fireEvent.click(deleteButton);
-
-  //     expect(screen.getByText('Confirmar Exclusão')).toBeInTheDocument();
-  //   });
-  // });
 
   test('chama window.print ao clicar no botão imprimir', async () => {
     setupSuccessfulMocks();

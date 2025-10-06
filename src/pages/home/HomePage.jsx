@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Menu, Bell, User } from 'lucide-react';
 import CronogramaPage from '../cronograma/CronogramaPage.jsx';
 import UCSRegistrationPage from '../ucsregisterpage/UcsRegistrationPage.jsx';
+import CadastroDeCurso from '../../components/CadastroDeCurso.jsx';
+import CadastroDeInstrutor from '../../components/CadastroDeInstrutor.jsx';
+import CadastroDeTurma from '../../components/CadastroDeTurma.jsx';
+import { Menu, GraduationCap, User, BookOpen, UserCheck, Users, Calendar } from 'lucide-react';
 import '../../styles/home.css';
-import GraduationCapIcon from '../../utils/cap.js';
+
 
 const HomePage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -28,6 +31,12 @@ const HomePage = () => {
         return <CronogramaPage onNavigateHome={navigateHome} />;
       case 'unidades-curriculares':
         return <UCSRegistrationPage onNavigateHome={navigateHome} />;
+      case 'cursos':
+        return <CadastroDeCurso onNavigateHome={navigateHome} />;
+      case 'instrutores':
+        return <CadastroDeInstrutor onNavigateHome={navigateHome} />;
+      case 'turmas':
+        return <CadastroDeTurma onNavigateHome={navigateHome} />;
       default:
         return <MainHomePage onNavigate={navigateTo} />;
     }
@@ -41,17 +50,13 @@ const HomePage = () => {
           <div className="home-header">
             <div className="header-content">
               <div className="header-title">
-                <button className="menu-btn" onClick={toggleSidebar} data-testid="menu-button">
+                <button className="menu-btn" onClick={toggleSidebar}>
                   <Menu size={24} />
                 </button>
-
-                <GraduationCapIcon size={28} />
+                <GraduationCap size={28} />
                 <h1>Gestão dos Cronogramas</h1>
               </div>
               <div className="header-actions">
-                <button className="header-btn" title="Notificações">
-                  <Bell size={20} />
-                </button>
               </div>
             </div>
           </div>
@@ -79,7 +84,7 @@ const HomePage = () => {
                       className={`nav-link ${currentPage === 'home' ? 'active' : ''}`}
                       onClick={(e) => { e.preventDefault(); navigateTo('home'); }}
                     >
-                      <GraduationCapIcon size={20} />
+                      <GraduationCap size={20} />
                       Página Inicial
                     </a>
                   </li>
@@ -89,8 +94,38 @@ const HomePage = () => {
                       className={`nav-link ${currentPage === 'unidades-curriculares' ? 'active' : ''}`}
                       onClick={(e) => { e.preventDefault(); navigateTo('unidades-curriculares'); }}
                     >
-                      <GraduationCapIcon size={20} />
+                      <BookOpen size={20} />
                       Unidades Curriculares
+                    </a>
+                  </li>
+                  <li className="nav-item">
+                    <a
+                      href="#"
+                      className={`nav-link ${currentPage === 'cursos' ? 'active' : ''}`}
+                      onClick={(e) => { e.preventDefault(); navigateTo('cursos'); }}
+                    >
+                      <GraduationCap size={20} />
+                      Cursos
+                    </a>
+                  </li>
+                  <li className="nav-item">
+                    <a
+                      href="#"
+                      className={`nav-link ${currentPage === 'instrutores' ? 'active' : ''}`}
+                      onClick={(e) => { e.preventDefault(); navigateTo('instrutores'); }}
+                    >
+                      <UserCheck size={20} />
+                      Instrutores
+                    </a>
+                  </li>
+                  <li className="nav-item">
+                    <a
+                      href="#"
+                      className={`nav-link ${currentPage === 'turmas' ? 'active' : ''}`}
+                      onClick={(e) => { e.preventDefault(); navigateTo('turmas'); }}
+                    >
+                      <Users size={20} />
+                      Turmas
                     </a>
                   </li>
                   <li className="nav-item">
@@ -99,7 +134,7 @@ const HomePage = () => {
                       className={`nav-link ${currentPage === 'cronograma' ? 'active' : ''}`}
                       onClick={(e) => { e.preventDefault(); navigateTo('cronograma'); }}
                     >
-                      <GraduationCapIcon size={20} />
+                      <Calendar size={20} />
                       Cronograma
                     </a>
                   </li>
@@ -122,7 +157,7 @@ const MainHomePage = ({ onNavigate }) => {
       <div className="welcome-section">
         <div className="logo-container">
           <div className="logo-icon">
-            <GraduationCapIcon size={40} />
+            <GraduationCap size={40} />
           </div>
         </div>
         <h1 className="welcome-title">SENAC Catalão</h1>
@@ -134,8 +169,8 @@ const MainHomePage = ({ onNavigate }) => {
 
       <div className="menu-grid">
         <div className="menu-card" onClick={() => onNavigate('unidades-curriculares')}>
-          <div className="menu-icon purple">
-            <GraduationCapIcon size={28} />
+          <div className="menu-icon teal">
+            <BookOpen size={28} />
           </div>
           <h3 className="menu-title">Unidades Curriculares</h3>
           <p className="menu-description">
@@ -143,9 +178,39 @@ const MainHomePage = ({ onNavigate }) => {
           </p>
         </div>
 
+        <div className="menu-card" onClick={() => onNavigate('cursos')}>
+          <div className="menu-icon purple">
+            <GraduationCap size={28} />
+          </div>
+          <h3 className="menu-title">Cursos</h3>
+          <p className="menu-description">
+            Cadastre e gerencie os cursos oferecidos
+          </p>
+        </div>
+
+        <div className="menu-card" onClick={() => onNavigate('instrutores')}>
+          <div className="menu-icon teal">
+            <UserCheck size={28} />
+          </div>
+          <h3 className="menu-title">Instrutores</h3>
+          <p className="menu-description">
+            Cadastre e gerencie os instrutores
+          </p>
+        </div>
+
+        <div className="menu-card" onClick={() => onNavigate('turmas')}>
+          <div className="menu-icon purple">
+            <Users size={28} />
+          </div>
+          <h3 className="menu-title">Turmas</h3>
+          <p className="menu-description">
+            Cadastre e gerencie as turmas
+          </p>
+        </div>
+
         <div className="menu-card" onClick={() => onNavigate('cronograma')}>
           <div className="menu-icon orange">
-            <GraduationCapIcon size={28} />
+            <Calendar size={28} />
           </div>
           <h3 className="menu-title">Cronograma</h3>
           <p className="menu-description">

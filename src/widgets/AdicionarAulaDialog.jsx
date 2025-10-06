@@ -48,8 +48,8 @@ const AdicionarAulaDialog = ({ selectedDays, onClose, onAulaAdded }) => {
     try {
       const { data, error } = await supabaseClient
         .from('turma')
-        .select('idturma, turma, idcurso')
-        .order('turma');
+        .select('idturma, turmanome, idcurso')
+        .order('turmanome');
 
       if (error) throw error;
       setTurmas(data || []);
@@ -173,10 +173,10 @@ const AdicionarAulaDialog = ({ selectedDays, onClose, onAulaAdded }) => {
                     borderRadius: '12px',
                     fontSize: '12px'
                   }}>
-                    {new Intl.DateTimeFormat('pt-BR', { 
-                      weekday: 'short', 
-                      day: '2-digit', 
-                      month: '2-digit' 
+                    {new Intl.DateTimeFormat('pt-BR', {
+                      weekday: 'short',
+                      day: '2-digit',
+                      month: '2-digit'
                     }).format(date)}
                   </span>
                 );
@@ -202,7 +202,7 @@ const AdicionarAulaDialog = ({ selectedDays, onClose, onAulaAdded }) => {
               <option value="">Selecione uma turma</option>
               {turmas.map(turma => (
                 <option key={turma.idturma} value={turma.idturma}>
-                  {turma.turma}
+                  {turma.turmanome}
                 </option>
               ))}
             </select>
@@ -224,8 +224,8 @@ const AdicionarAulaDialog = ({ selectedDays, onClose, onAulaAdded }) => {
                 {ucsFiltradas.map(uc => {
                   const cargaRestante = cargaHorariaUc[uc.iduc] || 0;
                   return (
-                    <option 
-                      key={uc.iduc} 
+                    <option
+                      key={uc.iduc}
                       value={uc.iduc}
                       disabled={cargaRestante < horasAula}
                     >
@@ -300,8 +300,8 @@ const AdicionarAulaDialog = ({ selectedDays, onClose, onAulaAdded }) => {
                     <span>Total de horas:</span>
                     <strong>{horasAula * selectedDays.size}</strong>
                   </div>
-                  <div style={{ 
-                    display: 'flex', 
+                  <div style={{
+                    display: 'flex',
                     justifyContent: 'space-between',
                     color: getCargaHorariaRestante() < 0 ? '#f44336' : 'inherit'
                   }}>
@@ -317,8 +317,8 @@ const AdicionarAulaDialog = ({ selectedDays, onClose, onAulaAdded }) => {
             <button type="button" onClick={onClose} className="btn-secondary">
               Cancelar
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn-primary"
               disabled={!podeSalvar()}
             >

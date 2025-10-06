@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, Clock, GraduationCap } from 'lucide-react';
 
+
 const UcsRegistrationForm = ({ cursos = [], onSubmit, initialData = null, onCancel = null }) => {
   const [formData, setFormData] = useState({
     nomeuc: initialData?.nomeuc || '',

@@ -116,10 +116,12 @@ const UCSRegistrationPage = ({ onNavigateHome }) => {
 
       await loadUcs();
       setEditingUc(null);
-      setErrorMessage(''); // Limpa mensagens de erro anteriores
+      setErrorMessage('');
     } catch (error) {
-      console.error('Erro ao atualizar UC:', error);
-      setErrorMessage(`Erro ao atualizar UC: ${error.message}`);
+      // Always log an Error object
+      const errObj = error instanceof Error ? error : new Error(error?.message || String(error));
+      console.error('Erro ao editar UC:', errObj);
+      setErrorMessage(`Erro ao editar UC: ${errObj.message}`);
     }
   };
 

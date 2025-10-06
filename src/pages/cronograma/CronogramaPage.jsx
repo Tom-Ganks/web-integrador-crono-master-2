@@ -57,8 +57,8 @@ const CronogramaPage = ({ onNavigateHome }) => {
     try {
       const { data, error } = await supabaseClient
         .from('turma')
-        .select('idturma, turma, cursos(nomecurso)')
-        .order('turma');
+        .select('idturma, turmanome, cursos(nomecurso)')
+        .order('turmanome');
 
       if (error) throw error;
       setTurmas(data || []);
@@ -74,7 +74,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
         .select(`
           idaula, iduc, idturma, data, horario, status, horas,
           unidades_curriculares(nomeuc),
-          turma(turma)
+          turma(turmanome)
         `)
         .order('data');
 
@@ -84,7 +84,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
       data?.forEach(aula => {
         const date = new Date(aula.data);
         const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-
+        
         if (!eventsMap[dateKey]) {
           eventsMap[dateKey] = [];
         }
@@ -100,7 +100,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
   const loadFeriadosNacionais = () => {
     const feriados = {};
     const currentYear = new Date().getFullYear();
-
+    
     for (let year = currentYear; year <= currentYear + 4; year++) {
       feriados[`${year}-0-1`] = '🎉 Ano Novo';
       feriados[`${year}-3-21`] = '🎖 Tiradentes';
@@ -111,7 +111,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
       feriados[`${year}-10-15`] = '🏛 Proclamação da República';
       feriados[`${year}-11-25`] = '🎄 Natal';
     }
-
+    
     setFeriadosNacionais(feriados);
   };
 
@@ -162,15 +162,15 @@ const CronogramaPage = ({ onNavigateHome }) => {
     const startingDayOfWeek = firstDay.getDay();
 
     const days = [];
-
+    
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
-
+    
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
-
+    
     return days;
   };
 
@@ -208,7 +208,33 @@ const CronogramaPage = ({ onNavigateHome }) => {
     }
   };
 
-  // Handler functions for edit and delete
+  const handleAdicionarAula = async (aulaData) => {
+    try {
+      const aulasParaInserir = Array.from(aulaData.dias).map(day => ({
+        iduc: aulaData.iduc,
+        idturma: aulaData.idturma,
+        data: day.toISOString().split('T')[0],
+        horario: aulaData.horario,
+        status: 'Agendada',
+        horas: aulaData.horas
+      }));
+
+      const { error } = await supabaseClient
+        .from('aulas')
+        .insert(aulasParaInserir);
+
+      if (error) throw error;
+
+      await loadAulas();
+      setSelectedDays(new Set());
+      setSelectedDay(null);
+      setShowAdicionarAulaDialog(false);
+    } catch (error) {
+      console.error('Erro ao adicionar aula:', error);
+      alert('Erro ao adicionar aula: ' + error.message);
+    }
+  };
+
   const handleEditAula = (aula) => {
     setAulaToEdit(aula);
     setShowEditDialog(true);
@@ -239,14 +265,16 @@ const CronogramaPage = ({ onNavigateHome }) => {
     }
   };
 
-  const handleEditSubmit = async (aulaData) => {
+  const handleEditSubmit = async (formData) => {
+    if (!aulaToEdit) return;
+
     try {
       const { error } = await supabaseClient
         .from('aulas')
         .update({
-          horario: aulaData.horario,
-          horas: aulaData.horas,
-          status: aulaData.status
+          horario: formData.horario,
+          horas: formData.horas,
+          status: formData.status
         })
         .eq('idaula', aulaToEdit.idaula);
 
@@ -258,33 +286,6 @@ const CronogramaPage = ({ onNavigateHome }) => {
     } catch (error) {
       console.error('Erro ao atualizar aula:', error);
       alert('Erro ao atualizar aula: ' + error.message);
-    }
-  };
-
-  const handleAdicionarAula = async (aulaData) => {
-    try {
-      const aulasParaInserir = Array.from(aulaData.dias).map(day => ({
-        iduc: aulaData.iduc,
-        idturma: aulaData.idturma,
-        data: day.toISOString().split('T')[0],
-        horario: aulaData.horario,
-        status: 'Agendada',
-        horas: aulaData.horas
-      }));
-
-      const { error } = await supabaseClient
-        .from('aulas')
-        .insert(aulasParaInserir);
-
-      if (error) throw error;
-
-      await loadAulas();
-      setSelectedDays(new Set());
-      setSelectedDay(null);
-      setShowAdicionarAulaDialog(false);
-    } catch (error) {
-      console.error('Erro ao adicionar aula:', error);
-      alert('Erro ao adicionar aula: ' + error.message);
     }
   };
 
@@ -304,19 +305,19 @@ const CronogramaPage = ({ onNavigateHome }) => {
       <div className="cronograma-header">
         <div className="cronograma-header-left">
           <button className="back-button" onClick={onNavigateHome}>
-            <ArrowLeft data-testid="arrow-left-icon" />
+            <ArrowLeft size={20} />
           </button>
           <h1 className="cronograma-title">Cronograma de Aulas</h1>
         </div>
         <div className="cronograma-actions">
-          <button
+          <button 
             className="action-button"
             onClick={() => setShowFeriadosDialog(true)}
             title="Gerenciar Feriados"
           >
             <Calendar size={20} />
           </button>
-          <button
+          <button 
             className="action-button"
             onClick={() => window.print()}
             title="Imprimir"
@@ -336,7 +337,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
           <option value="">Todas as Turmas</option>
           {turmas.map(turma => (
             <option key={turma.idturma} value={turma.idturma}>
-              {turma.cursos?.nomecurso} - {turma.turma}
+              {turma.cursos?.nomecurso} - {turma.turmanome}
             </option>
           ))}
         </select>
@@ -346,7 +347,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
       <div className="calendar-container">
         {/* Calendar Navigation */}
         <div className="calendar-navigation">
-          <button
+          <button 
             className="nav-button"
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
           >
@@ -355,7 +356,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
           <h2 className="month-title">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h2>
-          <button
+          <button 
             className="nav-button"
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
           >
@@ -378,7 +379,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
               return <div key={index} style={{ background: '#f5f5f5' }}></div>;
             }
 
-            const isSelected = selectedDay &&
+            const isSelected = selectedDay && 
               date.getTime() === selectedDay.getTime();
             const isMultiSelected = selectedDays.has(date.getTime());
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -421,21 +422,26 @@ const CronogramaPage = ({ onNavigateHome }) => {
             {selectedDays.size > 0 && (
               <p>{selectedDays.size} dia(s) selecionado(s)</p>
             )}
-
-            {/* Display events for selected day */}
+            {selectedDay && getEventsForDay(selectedDay).length === 0 && (
+              <p>Nenhuma aula agendada</p>
+            )}
             {selectedDay && getEventsForDay(selectedDay).length > 0 && (
-              <div className="day-events">
-                <h4>Aulas agendadas:</h4>
-                {getEventsForDay(selectedDay).map((aula, idx) => (
-                  <div key={idx} className="event-item">
-                    <div className="event-info">
-                      <strong>{aula.unidades_curriculares?.nomeuc}</strong>
-                      <br />
-                      Horário: {aula.horario} | {aula.horas}h | {aula.status}
-                      <br />
-                      Turma: {aula.turma?.turma}
+              <div style={{ marginTop: '12px' }}>
+                <h4 style={{ marginBottom: '8px', fontSize: '14px' }}>Aulas do dia:</h4>
+                {getEventsForDay(selectedDay).map((aula) => (
+                  <div key={aula.idaula} style={{
+                    background: '#f8f9fa',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    marginBottom: '8px'
+                  }}>
+                    <div style={{ fontSize: '12px', marginBottom: '4px' }}>
+                      <strong>{aula.unidades_curriculares?.nomeuc}</strong> - {aula.turma?.turmanome}
                     </div>
-                    <div className="event-actions">
+                    <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
+                      {aula.horario} ({aula.horas}h)
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
                       <button
                         onClick={() => handleEditAula(aula)}
                         style={{
@@ -445,8 +451,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
                           padding: '4px 8px',
                           borderRadius: '4px',
                           cursor: 'pointer',
-                          fontSize: '10px',
-                          marginRight: '4px'
+                          fontSize: '10px'
                         }}
                       >
                         ✏️ Editar
@@ -470,16 +475,12 @@ const CronogramaPage = ({ onNavigateHome }) => {
                 ))}
               </div>
             )}
-
-            {getEventsForDay(selectedDay).length === 0 && selectedDay && (
-              <p>Nenhuma aula agendada</p>
-            )}
           </div>
         )}
       </div>
 
       {/* Floating Action Button */}
-      <button
+      <button 
         className="fab"
         onClick={() => setShowAdicionarAulaDialog(true)}
         disabled={selectedDays.size === 0 && !selectedDay}
@@ -515,18 +516,18 @@ const CronogramaPage = ({ onNavigateHome }) => {
             </div>
             <div className="dialog-body">
               <p>Tem certeza que deseja apagar essa aula?</p>
-              <p><strong>{aulaToDelete?.unidades_curriculares?.nomeuc}</strong></p>
+              <p><strong>Aula {aulaToDelete?.idaula}</strong></p>
               <p>Horário: {aulaToDelete?.horario}</p>
               <p>Horas: {aulaToDelete?.horas}h</p>
             </div>
             <div className="dialog-actions">
-              <button
+              <button 
                 className="btn-secondary"
                 onClick={() => setShowDeleteDialog(false)}
               >
                 Cancelar
               </button>
-              <button
+              <button 
                 className="btn-danger"
                 onClick={confirmDeleteAula}
               >
@@ -545,7 +546,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
               <h2>Editar Aula</h2>
             </div>
             <div className="dialog-body">
-              <EditAulaForm
+              <EditAulaForm 
                 aula={aulaToEdit}
                 onSubmit={handleEditSubmit}
                 onCancel={() => setShowEditDialog(false)}
@@ -576,7 +577,7 @@ const EditAulaForm = ({ aula, onSubmit, onCancel }) => {
         <label>Horário:</label>
         <select
           value={formData.horario}
-          onChange={(e) => setFormData({ ...formData, horario: e.target.value })}
+          onChange={(e) => setFormData({...formData, horario: e.target.value})}
           className="form-select"
         >
           <option value="08:00-12:00">Matutino (08:00-12:00)</option>
@@ -584,7 +585,7 @@ const EditAulaForm = ({ aula, onSubmit, onCancel }) => {
           <option value="19:00-22:00">Noturno (19:00-22:00)</option>
         </select>
       </div>
-
+      
       <div className="form-group">
         <label>Horas:</label>
         <input
@@ -592,16 +593,16 @@ const EditAulaForm = ({ aula, onSubmit, onCancel }) => {
           min="1"
           max="8"
           value={formData.horas}
-          onChange={(e) => setFormData({ ...formData, horas: parseInt(e.target.value) })}
+          onChange={(e) => setFormData({...formData, horas: parseInt(e.target.value)})}
           className="form-input"
         />
       </div>
-
+      
       <div className="form-group">
         <label>Status:</label>
         <select
           value={formData.status}
-          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+          onChange={(e) => setFormData({...formData, status: e.target.value})}
           className="form-select"
         >
           <option value="Agendada">Agendada</option>
@@ -609,7 +610,7 @@ const EditAulaForm = ({ aula, onSubmit, onCancel }) => {
           <option value="Cancelada">Cancelada</option>
         </select>
       </div>
-
+      
       <div className="dialog-actions">
         <button type="button" onClick={onCancel} className="btn-secondary">
           Cancelar

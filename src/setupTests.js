@@ -38,18 +38,18 @@ global.alert = jest.fn();
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  unobserve() {}
+  constructor() { }
+  disconnect() { }
+  observe() { }
+  unobserve() { }
 };
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  unobserve() {}
+  constructor() { }
+  disconnect() { }
+  observe() { }
+  unobserve() { }
 };
 
 // Mock do Lucide React
@@ -69,6 +69,9 @@ jest.mock('lucide-react', () => ({
   Bell: jest.fn(({ size }) => <div data-testid="bell-icon" data-size={size} />),
   GraduationCap: jest.fn(({ size }) => <div data-testid="graduation-cap-icon" data-size={size} />),
   User: jest.fn(({ size }) => <div data-testid="user-icon" data-size={size} />),
+  Mail: jest.fn(({ size }) => <div data-testid="mail-icon" data-size={size} />),
+  Phone: jest.fn(({ size }) => <div data-testid="phone-icon" data-size={size} />),
+  Book: jest.fn(({ size }) => <div data-testid="book-icon" data-size={size} />),
 }));
 
 // Reset mocks before each test

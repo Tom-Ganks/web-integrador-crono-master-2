@@ -397,51 +397,56 @@ describe('UcsRegistrationPage', () => {
     });
   });
 
-//   test('lida com falha de conexão ao atualizar UC', async () => {
-//     supabaseClient.from.mockImplementation((table) => {
-//       if (table === 'cursos') {
-//         return {
-//           select: jest.fn(() => ({
-//             order: jest.fn(() => Promise.resolve({ data: mockCursos, error: null }))
-//           }))
-//         };
-//       }
-//       if (table === 'unidades_curriculares') {
-//         return {
-//           select: jest.fn(() => ({
-//             order: jest.fn(() => Promise.resolve({ data: mockUcs, error: null }))
-//           })),
-//           update: jest.fn(() => ({
-//             eq: jest.fn(() => Promise.resolve({ error: new Error('Falha de conexão com Supabase') }))
-//           }))
-//         };
-//       }
-//       return { select: jest.fn() };
-//     });
+  test('lida com falha de conexão ao editar UC', async () => {
+    supabaseClient.from.mockImplementation((table) => {
+      if (table === 'cursos') {
+        return {
+          select: jest.fn(() => ({
+            order: jest.fn(() => Promise.resolve({ data: mockCursos, error: null }))
+          }))
+        };
+      }
+      if (table === 'unidades_curriculares') {
+        return {
+          select: jest.fn(() => ({
+            order: jest.fn(() => Promise.resolve({ data: mockUcs, error: null }))
+          })),
+          update: jest.fn(() => ({
+            eq: jest.fn(() => Promise.resolve({ error: new Error('Falha de conexão com Supabase') }))
+          }))
+        };
+      }
+      return { select: jest.fn() };
+    });
 
-//     await act(async () => {
-//       render(<UcsRegistrationPage onNavigateHome={mockOnNavigateHome} />);
-//     });
+    await act(async () => {
+      render(<UcsRegistrationPage onNavigateHome={mockOnNavigateHome} />);
+    });
 
-//     await waitFor(() => {
-//       const editButton = screen.getAllByTitle('Editar')[0];
-//       fireEvent.click(editButton);
-//     });
+    await waitFor(() => {
+      const editButton = screen.getAllByTitle('Editar')[0];
+      fireEvent.click(editButton);
+    });
 
-//     await waitFor(() => {
-//       const nameInput = screen.getByDisplayValue('Banco de Dados');
-//       fireEvent.change(nameInput, { target: { value: 'Banco de Dados Atualizado' } });
-//     });
+    await waitFor(() => {
+      const nameInput = screen.getByLabelText('Nome');
+      const hoursInput = screen.getByLabelText('Carga Horária');
+      const courseSelect = screen.getByLabelText('Curso');
 
-//     const saveButton = screen.getByText(/Atualizar Unidade Curricular/);
+      fireEvent.change(nameInput, { target: { value: 'UC Editada' } });
+      fireEvent.change(hoursInput, { target: { value: '100' } });
+      fireEvent.change(courseSelect, { target: { value: '2' } });
+    });
+
+    const saveButton = screen.getByRole('button', { name: /Unidade Curricular$/ });
     
-//     await act(async () => {
-//       fireEvent.click(saveButton);
-//     });
+    await act(async () => {
+      fireEvent.click(saveButton);
+    });
 
-//     await waitFor(() => {
-//       expect(console.error).toHaveBeenCalledWith('Erro ao atualizar UC:', expect.any(Error));
-//       expect(screen.getByText(/Erro ao atualizar UC:/)).toBeInTheDocument();
-//     });
-//   });
+    await waitFor(() => {
+      expect(console.error).toHaveBeenCalledWith('Erro ao editar UC:', expect.any(Error));
+      expect(screen.getByText(/Erro ao editar UC:/)).toBeInTheDocument();
+    });
+  });
 });
