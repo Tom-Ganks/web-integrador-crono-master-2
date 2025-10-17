@@ -3,6 +3,23 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import HomePage from '../pages/home/HomePage.jsx';
 
+// safe debug import checks
+let Cronograma, UcsReg, CadastroCurso, CadastroInstrutor, CadastroTurma;
+try { Cronograma = require('../pages/cronograma/CronogramaPage.jsx'); } catch (e) { Cronograma = undefined; }
+try { UcsReg = require('../pages/ucsregisterpage/UcsRegistrationPage.jsx'); } catch (e) { UcsReg = undefined; }
+try { CadastroCurso = require('../components/CadastroDeCurso.jsx'); } catch (e) { CadastroCurso = undefined; }
+try { CadastroInstrutor = require('../components/CadastroDeInstrutor.jsx'); } catch (e) { CadastroInstrutor = undefined; }
+try { CadastroTurma = require('../components/CadastroDeTurma.jsx'); } catch (e) { CadastroTurma = undefined; }
+
+console.log('DEBUG imports:', {
+  HomePage: !!HomePage,
+  Cronograma: !!(Cronograma && (Cronograma.default || Cronograma)),
+  UcsReg: !!(UcsReg && (UcsReg.default || UcsReg)),
+  CadastroCurso: !!(CadastroCurso && (CadastroCurso.default || CadastroCurso)),
+  CadastroInstrutor: !!(CadastroInstrutor && (CadastroInstrutor.default || CadastroInstrutor)),
+  CadastroTurma: !!(CadastroTurma && (CadastroTurma.default || CadastroTurma)),
+});
+
 // Simula os componentes filhos para evitar renderização complexa
 jest.mock('../pages/cronograma/CronogramaPage.jsx', () => {
   return function MockCronogramaPage({ onNavigateHome }) {
@@ -26,7 +43,7 @@ jest.mock('../pages/ucsregisterpage/UcsRegistrationPage.jsx', () => {
   };
 });
 
-jest.mock('../../components/CadastroDeCurso.jsx', () => {
+jest.mock('../components/CadastroDeCurso.jsx', () => {
   return function MockCadastroDeCurso({ onNavigateHome }) {
     return (
       <div data-testid="curso-page">
@@ -37,7 +54,7 @@ jest.mock('../../components/CadastroDeCurso.jsx', () => {
   };
 });
 
-jest.mock('../../components/CadastroDeInstrutor.jsx', () => {
+jest.mock('../components/CadastroDeInstrutor.jsx', () => {
   return function MockCadastroDeInstrutor({ onNavigateHome }) {
     return (
       <div data-testid="instrutor-page">
@@ -48,7 +65,7 @@ jest.mock('../../components/CadastroDeInstrutor.jsx', () => {
   };
 });
 
-jest.mock('../../components/CadastroDeTurma.jsx', () => {
+jest.mock('../components/CadastroDeTurma.jsx', () => {
   return function MockCadastroDeTurma({ onNavigateHome }) {
     return (
       <div data-testid="turma-page">

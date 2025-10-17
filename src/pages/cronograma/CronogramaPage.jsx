@@ -82,9 +82,9 @@ const CronogramaPage = ({ onNavigateHome }) => {
 
       const eventsMap = {};
       data?.forEach(aula => {
-        const date = new Date(aula.data);
+        const date = new Date(aula.data + 'T00:00:00');
         const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-        
+
         if (!eventsMap[dateKey]) {
           eventsMap[dateKey] = [];
         }
@@ -100,7 +100,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
   const loadFeriadosNacionais = () => {
     const feriados = {};
     const currentYear = new Date().getFullYear();
-    
+
     for (let year = currentYear; year <= currentYear + 4; year++) {
       feriados[`${year}-0-1`] = '🎉 Ano Novo';
       feriados[`${year}-3-21`] = '🎖 Tiradentes';
@@ -111,7 +111,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
       feriados[`${year}-10-15`] = '🏛 Proclamação da República';
       feriados[`${year}-11-25`] = '🎄 Natal';
     }
-    
+
     setFeriadosNacionais(feriados);
   };
 
@@ -162,15 +162,15 @@ const CronogramaPage = ({ onNavigateHome }) => {
     const startingDayOfWeek = firstDay.getDay();
 
     const days = [];
-    
+
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
-    
+
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
-    
+
     return days;
   };
 
@@ -210,14 +210,32 @@ const CronogramaPage = ({ onNavigateHome }) => {
 
   const handleAdicionarAula = async (aulaData) => {
     try {
-      const aulasParaInserir = Array.from(aulaData.dias).map(day => ({
-        iduc: aulaData.iduc,
-        idturma: aulaData.idturma,
-        data: day.toISOString().split('T')[0],
-        horario: aulaData.horario,
-        status: 'Agendada',
-        horas: aulaData.horas
-      }));
+      const aulasParaInserir = Array.from(aulaData.dias)
+        .filter(day => {
+          // Evita domingos e feriados
+          const isSunday = day.getDay() === 0;
+          const dateKey = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
+          const isFeriadoDia = feriadosNacionais[dateKey] || feriadosMunicipais[dateKey];
+
+          if (isSunday || isFeriadoDia) {
+            console.warn(`Dia ${day.toLocaleDateString('pt-BR')} ignorado (domingo/feriado)`);
+            return false;
+          }
+          return true;
+        })
+        .map(day => ({
+          iduc: aulaData.iduc,
+          idturma: aulaData.idturma,
+          data: day.toISOString().split('T')[0],
+          horario: aulaData.horario,
+          status: 'Agendada',
+          horas: aulaData.horas
+        }));
+
+      if (aulasParaInserir.length === 0) {
+        alert('Não é possível agendar aulas apenas em domingos ou feriados.');
+        return;
+      }
 
       const { error } = await supabaseClient
         .from('aulas')
@@ -234,6 +252,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
       alert('Erro ao adicionar aula: ' + error.message);
     }
   };
+
 
   const handleEditAula = (aula) => {
     setAulaToEdit(aula);
@@ -310,14 +329,14 @@ const CronogramaPage = ({ onNavigateHome }) => {
           <h1 className="cronograma-title">Cronograma de Aulas</h1>
         </div>
         <div className="cronograma-actions">
-          <button 
+          <button
             className="action-button"
             onClick={() => setShowFeriadosDialog(true)}
             title="Gerenciar Feriados"
           >
             <Calendar size={20} />
           </button>
-          <button 
+          <button
             className="action-button"
             onClick={() => window.print()}
             title="Imprimir"
@@ -347,7 +366,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
       <div className="calendar-container">
         {/* Calendar Navigation */}
         <div className="calendar-navigation">
-          <button 
+          <button
             className="nav-button"
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
           >
@@ -356,7 +375,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
           <h2 className="month-title">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h2>
-          <button 
+          <button
             className="nav-button"
             onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
           >
@@ -379,7 +398,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
               return <div key={index} style={{ background: '#f5f5f5' }}></div>;
             }
 
-            const isSelected = selectedDay && 
+            const isSelected = selectedDay &&
               date.getTime() === selectedDay.getTime();
             const isMultiSelected = selectedDays.has(date.getTime());
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -480,7 +499,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
       </div>
 
       {/* Floating Action Button */}
-      <button 
+      <button
         className="fab"
         onClick={() => setShowAdicionarAulaDialog(true)}
         disabled={selectedDays.size === 0 && !selectedDay}
@@ -521,13 +540,13 @@ const CronogramaPage = ({ onNavigateHome }) => {
               <p>Horas: {aulaToDelete?.horas}h</p>
             </div>
             <div className="dialog-actions">
-              <button 
+              <button
                 className="btn-secondary"
                 onClick={() => setShowDeleteDialog(false)}
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 className="btn-danger"
                 onClick={confirmDeleteAula}
               >
@@ -546,7 +565,7 @@ const CronogramaPage = ({ onNavigateHome }) => {
               <h2>Editar Aula</h2>
             </div>
             <div className="dialog-body">
-              <EditAulaForm 
+              <EditAulaForm
                 aula={aulaToEdit}
                 onSubmit={handleEditSubmit}
                 onCancel={() => setShowEditDialog(false)}
@@ -566,8 +585,37 @@ const EditAulaForm = ({ aula, onSubmit, onCancel }) => {
     status: aula.status || 'Agendada'
   });
 
+  const getMaxHoras = () => {
+    if (formData.horario === '19:00-22:00') {
+      return 3;
+    }
+    return 4;
+  };
+
+  const handleHorasChange = (e) => {
+    const value = parseInt(e.target.value);
+    const maxHoras = getMaxHoras();
+    if (value > maxHoras) {
+      alert(`O turno ${formData.horario === '19:00-22:00' ? 'Noturno' : 'Matutino/Vespertino'} permite no máximo ${maxHoras} horas.`);
+      return;
+    }
+    setFormData({ ...formData, horas: value });
+  };
+
+  const handleHorarioChange = (e) => {
+    const newHorario = e.target.value;
+    const maxHoras = newHorario === '19:00-22:00' ? 3 : 4;
+    const newHoras = formData.horas > maxHoras ? maxHoras : formData.horas;
+    setFormData({ ...formData, horario: newHorario, horas: newHoras });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    const maxHoras = getMaxHoras();
+    if (formData.horas > maxHoras) {
+      alert(`O turno ${formData.horario === '19:00-22:00' ? 'Noturno' : 'Matutino/Vespertino'} permite no máximo ${maxHoras} horas.`);
+      return;
+    }
     onSubmit(formData);
   };
 
@@ -577,7 +625,7 @@ const EditAulaForm = ({ aula, onSubmit, onCancel }) => {
         <label>Horário:</label>
         <select
           value={formData.horario}
-          onChange={(e) => setFormData({...formData, horario: e.target.value})}
+          onChange={handleHorarioChange}
           className="form-select"
         >
           <option value="08:00-12:00">Matutino (08:00-12:00)</option>
@@ -585,24 +633,31 @@ const EditAulaForm = ({ aula, onSubmit, onCancel }) => {
           <option value="19:00-22:00">Noturno (19:00-22:00)</option>
         </select>
       </div>
-      
+
       <div className="form-group">
-        <label>Horas:</label>
+        <label>Horas: (máx. {getMaxHoras()}h)</label>
         <input
           type="number"
           min="1"
-          max="8"
+          max={getMaxHoras()}
           value={formData.horas}
-          onChange={(e) => setFormData({...formData, horas: parseInt(e.target.value)})}
+          onChange={handleHorasChange}
+          onInput={(e) => {
+            const max = getMaxHoras();
+            if (parseInt(e.target.value) > max) {
+              e.target.value = max;
+              setFormData({ ...formData, horas: max });
+            }
+          }}
           className="form-input"
         />
       </div>
-      
+
       <div className="form-group">
         <label>Status:</label>
         <select
           value={formData.status}
-          onChange={(e) => setFormData({...formData, status: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
           className="form-select"
         >
           <option value="Agendada">Agendada</option>
@@ -610,7 +665,7 @@ const EditAulaForm = ({ aula, onSubmit, onCancel }) => {
           <option value="Cancelada">Cancelada</option>
         </select>
       </div>
-      
+
       <div className="dialog-actions">
         <button type="button" onClick={onCancel} className="btn-secondary">
           Cancelar

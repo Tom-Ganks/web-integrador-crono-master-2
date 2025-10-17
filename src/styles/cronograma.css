@@ -154,6 +154,13 @@
 .calendar-day.selected {
   background: #e3f2fd;
   border: 2px solid #2196f3;
+  box-shadow: 0 0 0 2px #2196f3 inset;
+}
+
+.calendar-day.multi-selected {
+  background: #e3f2fd;
+  border: 3px solid #2196f3;
+  box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
 }
 
 .calendar-day.weekend {
